@@ -5,19 +5,19 @@ class Strategy(bt.Strategy):
 		("period_short_sma",50),
 		("period_long_sma",200),
 		("rsi_period",14),
-		("macd_short",12),
-		("macd_long",26),
-		("macd_signal",9),
+		("macd_short",24),
+		("macd_long",52),
+		("macd_signal",18),
 		("bollinger_period",20),
 		("bollinger_dev",2),
-		("capital_fraction",0.95),
+		("capital_fraction",0.9),
 		("commision", 0.001),
 	)
 
 	def __init__(self):
 		self.dataclose=self.datas[0].close
 		self.short_sma=bt.indicators.SimpleMovingAverage(self.data.close, period=self.params.period_short_sma)
-		self.long_sma=bt.indicators.SmoothedMovingAverage(self.data.close, period=self.params.period_long_sma)
+		self.long_sma=bt.indicators.SimpleMovingAverage(self.data.close, period=self.params.period_long_sma)
 		self.rsi = bt.indicators.RelativeStrengthIndex(period=self.params.rsi_period)
 		self.macd = bt.indicators.MACD(
 			self.dataclose,
@@ -32,14 +32,10 @@ class Strategy(bt.Strategy):
         )
 		
 	def log(self, txt, dt=None):
-        
-		''' Logging function for this strategy'''
-		
 		dt = dt or self.datas[0].datetime.date(0)
 		print('%s, %s' % (dt.isoformat(), txt))
 
 	def vol_buy(self) -> int:
-		''' COMENTARIO QUE NO PUSISTE '''
 		if self.broker.cash >= self.dataclose[0]:
 			cash = self.broker.get_cash()*self.params.capital_fraction
 			cash = cash-cash*self.params.commision
@@ -48,23 +44,31 @@ class Strategy(bt.Strategy):
 	
 	def condition_buy(self):
 		golden_cross=self.short_sma[0]>self.long_sma[0]
-		rsi_compra=self.rsi[0]<30
+		rsi_compra=self.rsi[0]<35
 		macd_compra=self.macd.macd[0] > 0 and self.macd.signal[0] > 0 and self.macd.macd[0] > self.macd.signal[0]
 		bollinger_compra=self.dataclose[0] < self.bollinger.lines.bot
-		#condiciones = [golden_cross, rsi_compra, macd_compra, bollinger_compra]
-		#condiciones_verdaderas = sum(condiciones)
-		#return condiciones_verdaderas >= 3
-		return (golden_cross or macd_compra) and (rsi_compra or bollinger_compra)
+		condiciones = [golden_cross, rsi_compra, macd_compra, bollinger_compra]
+		condiciones_verdaderas = sum(condiciones)
+		#if (condiciones_verdaderas>=3):
+		#	print(golden_cross)
+		#	print(rsi_compra)
+		#	print(macd_compra)
+		#	print(bollinger_compra)
+		return condiciones_verdaderas >= 3
 	
 	def condition_shell(self):
 		death_cross=self.short_sma[0]<self.long_sma[0]
-		rsi_venta=self.rsi[0]>70
+		rsi_venta=self.rsi[0]>65
 		macd_venta=self.macd.macd[0] < 0 and self.macd.signal[0] < 0 and self.macd.macd[0] < self.macd.signal[0]
-		bollinger_venta=self.dataclose[0] > self.bollinger.lines.bot
-		#condiciones = [death_cross, rsi_venta, macd_venta, bollinger_venta]
-		#condiciones_verdaderas = sum(condiciones)
-		#return condiciones_verdaderas >= 3
-		return (death_cross or macd_venta) and (rsi_venta or bollinger_venta)
+		bollinger_venta=self.dataclose[0] > self.bollinger.lines.top
+		condiciones = [death_cross, rsi_venta, macd_venta, bollinger_venta]
+		condiciones_verdaderas = sum(condiciones)
+		if (condiciones_verdaderas>=3):
+			print(death_cross)
+			print(rsi_venta)
+			print(macd_venta)
+			print(bollinger_venta)
+		return condiciones_verdaderas >= 3
 
 	def next(self):
 		if not self.position and self.condition_buy():

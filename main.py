@@ -9,14 +9,14 @@ if __name__ == '__main__':
 	cerebro = bt.Cerebro()
 	cerebro.addstrategy(Strategy)
 
-	#datapath = os.path.join('Datafeeds', 'orcl-1995-2014.txt')
+	datapath = os.path.join('Datafeeds', 'orcl-1995-2014.txt')
 	#datapath = os.path.join('Datafeeds', 'nvda-1999-2014.txt')
-	datapath = os.path.join('Datafeeds', 'yhoo-1996-2015.txt')
+	#datapath = os.path.join('Datafeeds', 'yhoo-1996-2015.txt')
 
 	data = bt.feeds.YahooFinanceCSVData(
 		dataname=datapath,
-		#fromdate=datetime.datetime(1995, 12, 30),
-		#todate=datetime.datetime(2000, 12, 30),
+		fromdate=datetime.datetime(1995, 12, 30),
+		todate=datetime.datetime(2000, 12, 30),
 		reverse=False
 	)
 
