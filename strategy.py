@@ -16,17 +16,30 @@ class Strategy(bt.Strategy):
 
 	def __init__(self):
 		self.dataclose=self.datas[0].close
-		self.short_sma=bt.indicators.SimpleMovingAverage(self.data.close, period=self.params.period_short_sma)
-		self.long_sma=bt.indicators.SimpleMovingAverage(self.data.close, period=self.params.period_long_sma)
-		self.rsi = bt.indicators.RelativeStrengthIndex(period=self.params.rsi_period)
+		
+		self.short_sma=bt.indicators.SimpleMovingAverage(
+			self.dataclose, 
+			period=self.params.period_short_sma
+		)
+
+		self.long_sma=bt.indicators.SimpleMovingAverage(
+			self.dataclose, 
+			period=self.params.period_long_sma
+		)
+
+		self.rsi = bt.indicators.RelativeStrengthIndex(
+			period=self.params.rsi_period
+		)
+
 		self.macd = bt.indicators.MACD(
 			self.dataclose,
 			period_me1=self.params.macd_short,
 			period_me2=self.params.macd_long,
             period_signal=self.params.macd_signal
 		)
+
 		self.bollinger = bt.indicators.BollingerBands(
-            self.data.close,
+            self.dataclose,
             period=self.params.bollinger_period,
             devfactor=self.params.bollinger_dev
         )
@@ -49,11 +62,6 @@ class Strategy(bt.Strategy):
 		bollinger_compra=self.dataclose[0] < self.bollinger.lines.bot
 		condiciones = [golden_cross, rsi_compra, macd_compra, bollinger_compra]
 		condiciones_verdaderas = sum(condiciones)
-		#if (condiciones_verdaderas>=3):
-		#	print(golden_cross)
-		#	print(rsi_compra)
-		#	print(macd_compra)
-		#	print(bollinger_compra)
 		return condiciones_verdaderas >= 3
 	
 	def condition_shell(self):
@@ -63,11 +71,6 @@ class Strategy(bt.Strategy):
 		bollinger_venta=self.dataclose[0] > self.bollinger.lines.top
 		condiciones = [death_cross, rsi_venta, macd_venta, bollinger_venta]
 		condiciones_verdaderas = sum(condiciones)
-		if (condiciones_verdaderas>=3):
-			print(death_cross)
-			print(rsi_venta)
-			print(macd_venta)
-			print(bollinger_venta)
 		return condiciones_verdaderas >= 3
 
 	def next(self):
@@ -76,6 +79,7 @@ class Strategy(bt.Strategy):
 			if vol>0: 
 				self.log('ORDEN DE COMPRA CREADA, %.2f - Cantidad: %i' % (self.dataclose[0], vol))
 				self.buy(size=vol)
+
 		elif self.position and self.condition_shell():
 			self.log(f"ORDEN DE VENTA CREADA, {self.dataclose[0]}")
 			self.sell(size=self.position.size)
@@ -83,14 +87,14 @@ class Strategy(bt.Strategy):
 	def notify_order(self, order):
 		if order.status in [order.Completed]:
 			if order.isbuy():
-				self.log('COMPRA EJECUTADA, %.2f, COMM: %.2f, SIZE: %i' % (order.executed.price, order.executed.comm, order.executed.size))
+				self.log('COMPRA EJECUTADA, %.2f, COMM: %.2f, SIZE: %i' % 
+			 			(order.executed.price, 
+						order.executed.comm, 
+						order.executed.size))
 			elif order.issell():
-				self.log('VENTA EJECUTADA, %.2f, COMM: %.2f, SIZE: %i' % (order.executed.price, order.executed.comm, order.executed.size))
-		elif order.status in [order.Canceled]:
-			self.log("ORDEN CANCELADA")
-			
-		elif order.status in [order.Margin]:
-			self.log("ORDEN MARGINADA")
-		
-		elif order.status in [order.Rejected]:
-			self.log("ORDEN RECHAZADA")
+				self.log('VENTA EJECUTADA, %.2f, COMM: %.2f, SIZE: %i' % 
+			 			(order.executed.price, 
+						order.executed.comm, 
+						order.executed.size))
+		elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+			self.log("ORDEN CANCELADA/MARGINADA/RECHAZADA")
