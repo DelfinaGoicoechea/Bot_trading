@@ -42,13 +42,13 @@ class Strategy(bt.Strategy):
             self.dataclose,
             period=self.params.bollinger_period,
             devfactor=self.params.bollinger_dev
-        )
+    )
 		
 	def log(self, txt, dt=None):
 		dt = dt or self.datas[0].datetime.date(0)
 		print('%s, %s' % (dt.isoformat(), txt))
 
-	def vol_buy(self) -> int:
+	def volume_to_buy(self) -> int:
 		if self.broker.cash >= self.dataclose[0]:
 			cash = self.broker.get_cash()*self.params.capital_fraction
 			cash = cash-cash*self.params.commision
@@ -57,30 +57,30 @@ class Strategy(bt.Strategy):
 	
 	def condition_buy(self):
 		golden_cross=self.short_sma[0]>self.long_sma[0]
-		rsi_compra=self.rsi[0]<35
-		macd_compra=self.macd.macd[0] > 0 and self.macd.signal[0] > 0 and self.macd.macd[0] > self.macd.signal[0]
-		bollinger_compra=self.dataclose[0] < self.bollinger.lines.bot
-		condiciones = [golden_cross, rsi_compra, macd_compra, bollinger_compra]
-		condiciones_verdaderas = sum(condiciones)
-		return condiciones_verdaderas >= 3
+		rsi_buy=self.rsi[0]<35
+		macd_buy=self.macd.macd[0] > 0 and self.macd.signal[0] > 0 and self.macd.macd[0] > self.macd.signal[0]
+		bollinger_buy=self.dataclose[0] < self.bollinger.lines.bot
+		conditions = [golden_cross, rsi_buy, macd_buy, bollinger_buy]
+		true_conditions = sum(conditions)
+		return true_conditions >= 3
 	
-	def condition_shell(self):
+	def condition_sell(self):
 		death_cross=self.short_sma[0]<self.long_sma[0]
-		rsi_venta=self.rsi[0]>65
-		macd_venta=self.macd.macd[0] < 0 and self.macd.signal[0] < 0 and self.macd.macd[0] < self.macd.signal[0]
-		bollinger_venta=self.dataclose[0] > self.bollinger.lines.top
-		condiciones = [death_cross, rsi_venta, macd_venta, bollinger_venta]
-		condiciones_verdaderas = sum(condiciones)
-		return condiciones_verdaderas >= 3
+		rsi_sell=self.rsi[0]>65
+		macd_sell=self.macd.macd[0] < 0 and self.macd.signal[0] < 0 and self.macd.macd[0] < self.macd.signal[0]
+		bollinger_sell=self.dataclose[0] > self.bollinger.lines.top
+		conditions = [death_cross, rsi_sell, macd_sell, bollinger_sell]
+		true_conditions = sum(conditions)
+		return true_conditions >= 3
 
 	def next(self):
 		if not self.position and self.condition_buy():
-			vol=self.vol_buy()
+			vol=self.volume_to_buy()
 			if vol>0: 
 				self.log('ORDEN DE COMPRA CREADA, %.2f - Cantidad: %i' % (self.dataclose[0], vol))
 				self.buy(size=vol)
 
-		elif self.position and self.condition_shell():
+		elif self.position and self.condition_sell():
 			self.log(f"ORDEN DE VENTA CREADA, {self.dataclose[0]}")
 			self.sell(size=self.position.size)
 

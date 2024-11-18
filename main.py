@@ -1,7 +1,6 @@
 from __future__ import (absolute_import, division, print_function,unicode_literals)
 import backtrader as bt
 import os.path
-import datetime
 from strategy import Strategy
 
     
@@ -13,17 +12,15 @@ if __name__ == '__main__':
 	#datapath  = os.path.join('Datafeeds', 'orcl-1995-2014.txt')
 	#datapath = os.path.join('Datafeeds', 'nvda-1999-2014.txt')
 	#datapath = os.path.join('Datafeeds', 'yhoo-1996-2015.txt')
-	datapath = os.path.join('Datafeeds', 'AAPL-14-24.csv')
-	#datapath = os.path.join('Datafeeds', 'AMZN-14-24.csv')
+	#datapath = os.path.join('Datafeeds', 'AAPL-14-24.csv')
+	datapath = os.path.join('Datafeeds', 'AMZN-14-24.csv')
 	#datapath = os.path.join('Datafeeds', 'GOOGL-14-24.csv')
 	#datapath = os.path.join('Datafeeds', 'MSFT-14-24.csv')
 
 	data = bt.feeds.YahooFinanceCSVData(
 		dataname=datapath,
-		#fromdate=datetime.datetime(1995, 12, 30),
-		#todate=datetime.datetime(2000, 12, 30),
 		reverse=False,
-    	adjclose=False
+    adjclose=False
 	)
 
 	# Add the Data Feed to Cerebro
@@ -37,4 +34,4 @@ if __name__ == '__main__':
 
 	print('Valor final de la cartera: %.2f' % cerebro.broker.getvalue())
 	
-	#cerebro.plot()
+	cerebro.plot()
